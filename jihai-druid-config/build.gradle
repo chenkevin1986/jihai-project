@@ -1,0 +1,9 @@
+
+dependencies {
+    compile "com.alibaba:druid:${druidVersion}"
+    compile "mysql:mysql-connector-java:${mysqlConnectorVersion}"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    //compile "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
+    compile project(":jihai-utils")
+
+}

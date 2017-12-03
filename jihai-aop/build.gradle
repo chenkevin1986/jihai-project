@@ -1,0 +1,8 @@
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-aop:${springBootVersion}"
+    compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+    compile project (":jihai-utils")
+    compile project (":jihai-common")
+    //compile project (":jihai-redis")
+}

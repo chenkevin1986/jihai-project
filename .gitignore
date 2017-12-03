@@ -1,0 +1,14 @@
+*iml
+.gradle/*
+.idea/*
+src
+build
+**/build/**
+*.class
+*.log
+/logs/*
+/classes/*
+.idea
+.gradle
+logs
+out/*

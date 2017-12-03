@@ -1,0 +1,180 @@
+
+buildscript {
+    ext {
+        springBootVersion = "${springBootVersion}"
+        springCloudVersion = "${springCloudVersion}"
+    }
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.springframework.boot:spring-boot-devtools:${springBootVersion}")
+    }
+
+}
+
+apply plugin: "java"
+apply plugin:'groovy'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+[compileJava, compileTestJava, javadoc]*.options*.encoding = "${fileEncoding}"
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+    mavenCentral()
+}
+
+
+
+//全局配置,对所有工程都有效
+allprojects {
+    apply plugin: "java"
+    apply plugin:'groovy'
+    apply plugin: 'eclipse'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'idea'
+
+    ext {
+        springBootVersion = "${springBootVersion}"
+        springCloudVersion = "${springCloudVersion}"
+    }
+
+    repositories {
+        //mavenCentral()
+        mavenLocal()
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+    }
+
+    dependencies {
+        compile('org.projectlombok:lombok')
+        testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}")
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+
+}
+
+//所有子工程共有的配置
+subprojects {
+    apply plugin: 'idea'
+    apply plugin: "java"
+    apply plugin:'groovy'
+    apply plugin: 'eclipse'
+    apply plugin: 'org.springframework.boot'
+    // JVM 版本号要求
+    sourceCompatibility = "${sourceCompatibility}"
+    targetCompatibility = "${targetCompatibility}"
+    // java编译的时候缺省状态下会因为中文字符而失败
+    [compileJava,compileTestJava,javadoc]*.options*.encoding = "${fileEncoding}"
+
+    //配置多个maven源
+    repositories {
+        //mavenCentral()
+        mavenLocal()
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+    }
+}
+
+
+
+configure(subprojects.findAll {it.name.contentEquals("inner-service") }) {
+
+    task lastJar(type: Copy, dependsOn: build) {
+        String jarName = project.name + '-' + project.version + '.jar'
+        from "$buildDir/libs/" + jarName
+        into "${rootProject.buildDir}/${rootProject.name}/${project.name}"
+    }
+
+    task copyConfigGlobal(type: Copy){
+        from "${rootProject.rootDir}/globalproperties"
+        into "${rootProject.buildDir}/${rootProject.name}/${project.name}/globalproperties"
+    }
+
+    task createDockerEntrypoint << {
+        StringBuffer sb = new StringBuffer()
+        sb.append("#!/bin/sh\n").append("if [ -f \"\${JAVA_HOME}/bin/java\" ]; then\n")
+                .append("  JAVA=\${JAVA_HOME}/bin/java\n").append("else\n").append("  JAVA=java\n")
+                .append("fi\n").append("export JAVA\n").append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+UseG1GC -XX:MaxGCPauseMillis=200\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:G1RSetUpdatingPauseTimePercent=5\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintGCDetails\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintGCDateStamps\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintHeapAtGC\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintTenuringDistribution\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintGCApplicationStoppedTime\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+PrintPromotionFailure\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:+UseGCLogFileRotation\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:NumberOfGCLogFiles=10\"\n")
+                .append("JAVA_OPTS=\"\$JAVA_OPTS -XX:GCLogFileSize=10M\"\n")
+                .append("\$JAVA -server \$JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar ${project.name}-${project.version}.jar")
+        String fileName = "${rootProject.buildDir}/${rootProject.name}/${project.name}/docker-entrypoint.sh"
+        writeStartShellFile(fileName, sb.toString())
+    }
+
+    task createDockerfile <<{
+        StringBuffer sb = new StringBuffer();
+        sb.append("FROM openjdk:8-jre-alpine\n").append("MAINTAINER  kevin  <gchen@gizwits.com>\n")
+                .append("VOLUME /tmp\n").append("ADD ${project.name}-${project.version}.jar .\n")
+                .append("COPY globalproperties/ globalproperties/\n")
+                .append("COPY docker-entrypoint.sh /\n").append("RUN chmod a+x /docker-entrypoint.sh\n")
+                .append("ENTRYPOINT [\"/docker-entrypoint.sh\"]")
+        String fileName = "${rootProject.buildDir}/${rootProject.name}/${project.name}/Dockerfile"
+        writeStartShellFile(fileName, sb.toString())
+    }
+
+    copyConfigGlobal.dependsOn lastJar
+
+    createDockerEntrypoint.dependsOn copyConfigGlobal
+
+    createDockerfile.dependsOn createDockerEntrypoint
+
+    task dockerBuild(type:Exec, dependsOn: createDockerfile) {
+        commandLine "docker", "build","${rootProject.buildDir}/${rootProject.name}/${project.name}", "-t", "172.16.196.119:5000/aux-${project.name}"
+    }
+
+    task dockerPush(type:Exec,dependsOn: dockerBuild){
+        commandLine "docker", "push","172.16.196.119:5000/aux-${project.name}"
+    }
+}
+
+
+
+
+task pack(type: Exec, dependsOn: subprojects.findAll { it.name.contentEquals("inner-service")}.collect {
+    it.getTasks().getByName("dockerPush")
+}) {
+    commandLine 'bash', './clean_docker_images_none.sh'
+}
+
+/**
+ * 删除所有的build目录
+ */
+task cleanProject (){
+    println  "$rootProject.buildDir  ...old build file delete ING..."
+    allprojects.each{
+        def o = new File(it.projectDir,"build")
+        o.deleteDir()
+        println "$it.projectDir ...old build file delete ING..."
+    }
+}
+
+def writeStartShellFile(fileName, content) {
+    new File(fileName).withPrintWriter { printWriter ->
+        printWriter.println(content)
+    }
+}
+
+
+
+

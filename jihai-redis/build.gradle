@@ -1,0 +1,5 @@
+dependencies {
+    compile "com.alibaba:fastjson:${fastjsonVersion}"
+    compile "org.springframework.boot:spring-boot-starter-data-redis"
+    //compile "org.springframework.session:spring-session-data-redis:${springSessionDataRedisVersion}"
+}

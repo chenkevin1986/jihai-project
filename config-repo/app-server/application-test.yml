@@ -1,0 +1,9 @@
+spring:
+      jpa:
+           show-sql: true
+      datasource:
+                url:  jdbc:mysql://rm-bp1m8pq407s2yls07.mysql.rds.aliyuncs.com:3306/app_db?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
+                username: rootaux
+                password: SHEhe123
+
+

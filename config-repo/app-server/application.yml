@@ -1,0 +1,60 @@
+spring:
+      jpa:
+          database: MYSQL
+          show-sql: true
+          hibernate:
+            ddlAuto: update
+          properties:
+            hibernate:
+              schema_update:
+                unique_constraint_strategy: SKIP
+      datasource:
+                type: com.alibaba.druid.pool.DruidDataSource
+                driverClassName: com.mysql.jdbc.Driver
+                initialSize: 5
+                minIdle: 5
+                maxActive: 5
+                maxWait: 60000                                              # 配置获取连接等待超时的时间
+                timeBetweenEvictionRunsMillis: 60000                        # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+                minEvictableIdleTimeMillis: 300000                          # 配置一个连接在池中最小生存的时间，单位是毫秒
+                testWhileIdle: true
+                testOnBorrow: false
+                testOnReturn: false
+                poolPreparedStatements: true                                 # 打开PSCache
+                maxPoolPreparedStatementPerConnectionSize: 20                #指定每个连接上PSCache的大小
+                filters: stat,wall,log4j
+                connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000  # 通过connectProperties属性来打开mergeSql功能；慢SQL记录
+                #useGlobalDataSourceStat: true                                 # 合并多个DruidDataSource的监控数据
+      jackson:
+        date-format: yyyy-MM-dd HH:mm:ss #纠正推送到前端的时间相关的json数据格式。如果不知道，其时间格式为lang 毫秒数。
+        time-zone: GMT+8
+server:
+    port: 12341
+    contextPath: /app
+
+logging:
+   path: logs/app-server
+
+g:
+ apiInfo:
+       title: Gizwits-通用框架 REST APIdocker
+       description: 通用组件API Document
+       version: 1.0.0
+       termsOfServiceUrl: 
+       contact: 
+            name: Consumer Products Deparment
+            url: http://www.gizwits.com
+            email: cpd@gizwits.com
+       license: 
+       licenseUrl:
+       pathsRegex: ^.*(?<!error)$
+druid:
+  urlMappings: /druid/*
+  urlPatterns: /*
+  exclusions: /druid/*,*.js,*.gif,*.jpg,*.png,*.css,*.ico
+  allow: 127.0.0.1
+  deny: 1.1.1.1
+  loginUsername: admin
+  loginPassword: 123456
+  resetEnable: false
+
