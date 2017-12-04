@@ -1,0 +1,19 @@
+server:
+  port: 7001
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:1111/eureka/
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native  #从本地工程指定目录读取相关模块的配置文件
+  cloud:
+    config:
+      server:
+        native:
+          searchLocations: file:config-repo/{application}
+
+
+

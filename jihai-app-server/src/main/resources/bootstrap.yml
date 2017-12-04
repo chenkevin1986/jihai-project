@@ -1,0 +1,17 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:1111/eureka/
+spring:
+  application:
+    name: app-server
+  session:
+      store-type: none
+  cloud:
+    config:
+      uri: http://localhost:7001/
+      profile: dev
+
+
+
+
