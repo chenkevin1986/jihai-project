@@ -1,0 +1,7 @@
+
+dependencies {
+    compile project (":jihai-utils")
+    compile 'com.fasterxml:classmate'
+    compile 'com.google.guava:guava'
+    compile 'com.google.code.gson:gson'
+}

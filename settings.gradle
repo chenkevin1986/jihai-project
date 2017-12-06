@@ -12,4 +12,5 @@ include 'jihai-redis'
 include 'jihai-swagger2'
 include 'jihai-utils'
 include 'jihai-app-server'
+include 'jihai-mock'
 

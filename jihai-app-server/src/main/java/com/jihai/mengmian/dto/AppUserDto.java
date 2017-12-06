@@ -3,7 +3,6 @@ package com.jihai.mengmian.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by kevinchen on 2017/7/24.
